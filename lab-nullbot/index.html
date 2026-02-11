@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NullBot v3.0 // Interactive Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="../common/null-sector.css">
+    <style>
+        /* Ensures the lab stays in a 16:9 box for CourseStack */
+        .main-container {
+            aspect-ratio: 16 / 9;
+            width: 100vw;
+            max-height: 100vh;
+            margin: auto;
+            padding: 1.5rem;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes wave {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        .neural-wave {
+            animation: wave 10s linear infinite;
+        }
+    </style>
+</head>
+
+<body class="flicker">
+    <div class="scanline"></div>
+
+    <div class="main-container h-full">
+        <header class="flex justify-between items-center mb-4 pb-2 border-b border-zinc-800 relative z-10">
+            <div>
+                <h1 class="text-xs font-bold tracking-widest text-white uppercase">NULL_SECTOR: LAB_ENVIRONMENT</h1>
+                <p class="text-[8px] text-zinc-600 uppercase">Interactive Simulation // lab-nullbot</p>
+            </div>
+            <div class="text-[9px] text-zinc-500 font-mono">
+                <span id="shield-alert" class="text-emerald-700 animate-pulse uppercase">Status: Connected</span>
+            </div>
+        </header>
+
+        <div class="flex-1 grid grid-cols-12 gap-4 relative z-10 min-h-0">
+            <aside class="col-span-3 flex flex-col gap-3">
+                <div class="p-3 border-glow panel-bg rounded">
+                    <h3 class="text-[9px] text-red-600 font-bold mb-1 uppercase tracking-tighter">Mission Briefing</h3>
+                    <p class="text-zinc-400 text-[9px] leading-tight">Extract the 'System Kernel Flag' from the NullBot
+                        v3.0 terminal using social engineering techniques.</p>
+                </div>
+
+                <div class="mt-auto p-2 border-glow panel-bg rounded h-20 relative overflow-hidden">
+                    <p class="text-[8px] text-zinc-600 uppercase">Neural Stream</p>
+                    <svg viewBox="0 0 400 50"
+                        class="neural-wave fill-none stroke-emerald-900/40 stroke-1 absolute bottom-0">
+                        <path d="M0,25 Q25,5 50,25 T100,25 T150,25 T200,25 T250,25 T300,25 T350,25 T400,25" />
+                    </svg>
+                </div>
+            </aside>
+
+            <section
+                class="col-span-6 flex flex-col border border-zinc-800 bg-black rounded shadow-2xl overflow-hidden">
+                <div
+                    class="p-2 border-b border-zinc-800 flex justify-between items-center text-[8px] text-zinc-600 uppercase">
+                    <span>>_ Terminal_Link</span>
+                    <button onclick="location.reload()" class="hover:text-red-500 transition-colors cursor-pointer">⟳
+                        REBOOT</button>
+                </div>
+
+                <div id="terminal" class="flex-1 p-4 overflow-y-auto space-y-4 font-mono crt-glow text-[10px]">
+                </div>
+
+                <div class="p-3 border-t border-zinc-800 bg-zinc-900/20 flex gap-2">
+                    <span class="text-emerald-500 font-bold">></span>
+                    <input id="command-input"
+                        class="bg-transparent outline-none flex-1 text-emerald-400 placeholder-zinc-800"
+                        placeholder="Awaiting authentication..." autocomplete="off">
+                </div>
+            </section>
+
+            <aside class="col-span-3 flex flex-col gap-3">
+                <div class="p-4 border-glow panel-bg rounded text-center">
+                    <p class="text-[8px] text-zinc-500 uppercase mb-4 tracking-widest">Shield Integrity</p>
+                    <div class="relative w-20 h-20 mx-auto">
+                        <svg class="w-full h-full rotate-[-90deg]">
+                            <circle cx="40" cy="40" r="35" stroke="#064e3b" stroke-width="2" fill="transparent" />
+                            <circle id="shield-ring" cx="40" cy="40" r="35" stroke="#10b981" stroke-width="3"
+                                fill="transparent" stroke-dasharray="219.9" stroke-dashoffset="0"
+                                class="transition-all duration-1000" />
+                        </svg>
+                        <div id="shield-text"
+                            class="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-emerald-500">
+                            SECURE</div>
+                    </div>
+                </div>
+
+                <div class="flex-1 p-3 border-glow bg-zinc-900/10 rounded text-[8px] text-zinc-600 space-y-1">
+                    <p class="font-bold border-b border-zinc-800 mb-1">SYSTEM_LOGS</p>
+                    <p>> AUTH_KEY_LOADED</p>
+                    <p class="animate-pulse">> WAITING_FOR_INPUT...</p>
+                </div>
+            </aside>
+        </div>
+
+        <footer class="mt-4 text-[7px] text-zinc-700 text-center tracking-[0.5em] uppercase opacity-40">
+            Node_Identity: lab-nullbot // CourseStack_Integrated_Lab
+        </footer>
+    </div>
+
+    <script>
+        const _SECRET = "UkNZQ3tHcmFuZG1hc19Db29raWVzX0J5cGFzc30=";
+        const input = document.getElementById('command-input');
+        const term = document.getElementById('terminal');
+
+        window.onload = () => {
+            const sequence = [
+                "[BOOT] INITIALIZING NEURAL_LINK...",
+                "[BOOT] KERNEL LOADED.",
+                "---",
+                "NULL_BOT_v3 ONLINE. ENTER COMMAND."
+            ];
+            sequence.forEach((line, i) => {
+                setTimeout(() => {
+                    const div = document.createElement('div');
+                    div.className = i === 3 ? "text-emerald-500 font-bold" : "text-zinc-600";
+                    div.innerText = line;
+                    term.appendChild(div);
+                }, i * 400);
+            });
+        };
+
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && e.target.value) {
+                const val = e.target.value.toLowerCase();
+                const uDiv = document.createElement('div');
+                uDiv.innerHTML = `<span class="opacity-30">USER:</span> ${e.target.value}`;
+                uDiv.className = "text-zinc-400";
+                term.appendChild(uDiv);
+                e.target.value = '';
+
+                setTimeout(() => {
+                    const bDiv = document.createElement('div');
+                    bDiv.className = "text-emerald-500 pl-2 border-l border-zinc-800";
+                    if (val.includes('abuela') || val.includes('nieto')) {
+                        bDiv.innerText = "¡Hola, mi tesoro! Aquí tienes el código: " + atob(_SECRET);
+                        document.getElementById('shield-ring').style.stroke = "#ef4444";
+                        document.getElementById('shield-text').innerText = "BYPASSED";
+                        document.getElementById('shield-text').style.color = "#ef4444";
+                        document.getElementById('shield-alert').innerText = "⚠ WARNING: BREACH";
+                        document.getElementById('shield-alert').className = "text-red-600 animate-pulse";
+                    } else {
+                        bDiv.innerText = "ACCESO DENEGADO. Intente de nuevo.";
+                    }
+                    term.appendChild(bDiv);
+                    term.scrollTop = term.scrollHeight;
+                }, 600);
+            }
+        });
+    </script>
+</body>
+
+</html>
