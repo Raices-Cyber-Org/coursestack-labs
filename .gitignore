@@ -1,0 +1,16 @@
+# Editor temporary files (Kate/Vim/Gedit)
+*~
+*.swp
+*.kate-swp
+
+# OS generated files
+.DS_Store
+.directory
+Thumbs.db
+
+# Local preview server logs
+*.log
+
+# Folders to ignore (if you use node later)
+node_modules/
+dist/
