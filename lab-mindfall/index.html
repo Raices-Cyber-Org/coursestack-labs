@@ -1,225 +1,334 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>The Mindfall Protocol | Raices Cyber</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="../common/null-sector.css">
-    <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@19.0.0",
-        "react-dom": "https://esm.sh/react-dom@19.0.0/client"
-      }
-    }
-    </script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="stylesheet" href="../common/null-sector.css" />
     <style>
-        body {
-            @apply bg-[#050505] text-[#00ff41] font-mono overflow-hidden;
-        }
+      body {
+        background-color: #050505;
+        color: #00ff41;
+        font-family: monospace;
+        overflow: hidden;
+        margin: 0;
+      }
 
-        .blinking-cursor::after {
-            content: '_';
-            animation: blink 1s step-end infinite;
-        }
+      /* The "Safety" Layer: Ensures the CRT effect doesn't block clicks */
+      .crt-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none !important; /* CRITICAL: Clicks pass through this */
+        z-index: 999;
+        background:
+          repeating-linear-gradient(
+            rgba(18, 16, 16, 0) 50%,
+            rgba(0, 0, 0, 0.25) 50%
+          ),
+          linear-gradient(
+            90deg,
+            rgba(255, 0, 0, 0.06),
+            rgba(0, 255, 0, 0.02),
+            rgba(0, 0, 255, 0.06)
+          );
+        background-size:
+          100% 2px,
+          3px 100%;
+      }
 
-        @keyframes blink {
+      #root {
+        position: relative;
+        z-index: 10;
+        height: 100vh;
+      }
 
-            from,
-            to {
-                color: transparent;
-            }
+      /* Ensure interactive elements are always on top */
+      input,
+      button,
+      .node-dot {
+        position: relative;
+        z-index: 20;
+        cursor: pointer !important;
+      }
 
-            50% {
-                color: #00ff41;
-            }
-        }
+      .node-dot {
+        transition: all 0.3s ease;
+      }
+      .node-dot:hover {
+        r: 6;
+        filter: drop-shadow(0 0 10px #00ff41);
+      }
 
-        .node-dot {
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .node-dot:hover {
-            r: 6;
-            filter: drop-shadow(0 0 8px #00ff41);
-        }
-
-        .success-glow {
-            filter: drop-shadow(0 0 15px #00ff41);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.7;
-            }
-        }
+      .avatar-container {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 1px solid #00ff41;
+        background: #0d0d0d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .avatar-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
     </style>
-</head>
+  </head>
+  <body>
+    <div class="crt-overlay"></div>
 
-<body class="scanline">
     <div id="root"></div>
 
-    <script type="module">
-        import React, {useState, useEffect, useCallback} from 'react';
-        import ReactDOM from 'react-dom';
+    <script type="text/babel">
+      const { useState } = React;
 
-        const DECRYPTION_KEYS = [
-            "RCYC{Snow_In_Utuado}", "RCYC{Spoofed_Domain_Support}", "RCYC{Pay_Or_Darkness}",
-            "RCYC{Socket_Scan_Success}", "RCYC{203.0.113.42}", "RCYC{Port_502}",
-            "RCYC{El_Morro_Sentry}", "RCYC{Roleplay}", "RCYC{Grandmas_Cookies_Bypass}"
-        ];
+      const DECRYPTION_KEYS = [
+        "RCYC{Snow_In_Utuado}",
+        "RCYC{Spoofed_Domain_Support}",
+        "RCYC{Pay_Or_Darkness}",
+        "RCYC{Socket_Scan_Success}",
+        "RCYC{203.0.113.42}",
+        "RCYC{Port_502}",
+        "RCYC{El_Morro_Sentry}",
+        "RCYC{Roleplay}",
+        "RCYC{Grandmas_Cookies_Bypass}",
+      ];
 
-        const NODES = [
-            {id: "utuado", name: "Utuado", x: 40, y: 45, keyIndex: 0},
-            {id: "san-juan", name: "San Juan", x: 75, y: 15, keyIndex: 1},
-            {id: "ponce", name: "Ponce", x: 42, y: 65, keyIndex: 2},
-            {id: "bayamon", name: "Bayamón", x: 70, y: 25, keyIndex: 3},
-            {id: "carolina", name: "Carolina", x: 80, y: 22, keyIndex: 4},
-            {id: "guayama", name: "Guayama", x: 60, y: 75, keyIndex: 5},
-            {id: "el-morro", name: "El Morro", x: 80, y: 10, keyIndex: 6},
-            {id: "caguas", name: "Caguas", x: 68, y: 35, keyIndex: 7},
-            {id: "el-nucleo", name: "El Núcleo", x: 50, y: 50, keyIndex: 8}
-        ];
+      const NODES = [
+        { id: "utuado", name: "Utuado", x: 40, y: 45, keyIndex: 0 },
+        { id: "san-juan", name: "San Juan", x: 75, y: 15, keyIndex: 1 },
+        { id: "ponce", name: "Ponce", x: 42, y: 65, keyIndex: 2 },
+        { id: "bayamon", name: "Bayamón", x: 70, y: 25, keyIndex: 3 },
+        { id: "carolina", name: "Carolina", x: 80, y: 22, keyIndex: 4 },
+        { id: "guayama", name: "Guayama", x: 60, y: 75, keyIndex: 5 },
+        { id: "el-morro", name: "El Morro", x: 80, y: 10, keyIndex: 6 },
+        { id: "caguas", name: "Caguas", x: 68, y: 35, keyIndex: 7 },
+        { id: "el-nucleo", name: "El Núcleo", x: 50, y: 50, keyIndex: 8 },
+      ];
 
-        function App() {
-            const [nodeStates, setNodeStates] = useState({});
-            const [unlockedCount, setUnlockedCount] = useState(0);
-            const [currentPromptNode, setCurrentPromptNode] = useState(null);
-            const [input, setInput] = useState('');
-            const [moniker, setMoniker] = useState(localStorage.getItem('moniker') || '');
-            const [isStarted, setIsStarted] = useState(!!localStorage.getItem('moniker'));
-            const [showWinScreen, setShowWinScreen] = useState(false);
+      function App() {
+        const [nodeStates, setNodeStates] = useState({});
+        const [unlockedCount, setUnlockedCount] = useState(0);
+        const [currentPromptNode, setCurrentPromptNode] = useState(null);
+        const [input, setInput] = useState("");
+        const [moniker, setMoniker] = useState(
+          localStorage.getItem("moniker") || "",
+        );
+        const [avatar, setAvatar] = useState(
+          localStorage.getItem("avatar") || null,
+        );
+        const [isStarted, setIsStarted] = useState(false);
+        const [showWin, setShowWin] = useState(false);
 
-            const handleUnlock = () => {
-                if (input.toLowerCase() === DECRYPTION_KEYS[currentPromptNode.keyIndex].toLowerCase()) {
-                    const newStates = {...nodeStates, [currentPromptNode.id]: true};
-                    setNodeStates(newStates);
-                    const newCount = unlockedCount + 1;
-                    setUnlockedCount(newCount);
-                    setCurrentPromptNode(null);
-                    setInput('');
-
-                    if (newCount === NODES.length) {
-                        setTimeout(() => setShowWinScreen(true), 1000);
-                    }
-                } else {
-                    alert("ACCESS DENIED: INVALID KEY");
-                }
+        const handleFile = (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              setAvatar(reader.result);
+              localStorage.setItem("avatar", reader.result);
             };
+            reader.readAsDataURL(file);
+          }
+        };
 
-            if (!isStarted) {
-                return (
-                    <div className="flex flex-col items-center justify-center h-screen space-y-4">
-                        <div className="text-center space-y-2 mb-4">
-                            <h1 className="text-4xl font-black tracking-tighter text-white">THE MINDFALL PROTOCOL</h1>
-                            <p className="text-[10px] text-zinc-500 uppercase tracking-[0.3em]">Raices Cyber Operational Lab</p>
-                        </div>
-                        <input
-                            className="bg-black border border-[#00ff41] p-3 text-center outline-none w-64 text-sm"
-                            placeholder="OPERATIVE_MONIKER"
-                            value={moniker}
-                            onChange={(e) => setMoniker(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && moniker && setIsStarted(true)}
-                        />
-                        <button
-                            disabled={!moniker}
-                            onClick={() => {localStorage.setItem('moniker', moniker); setIsStarted(true);}}
-                            className="px-10 py-2 bg-[#00ff41] text-black font-bold hover:bg-white transition-colors disabled:opacity-30"
-                        >
-                            INITIATE SATELLITE LINK
-                        </button>
-                    </div>
-                );
-            }
+        const decrypt = () => {
+          if (
+            input.trim().toLowerCase() ===
+            DECRYPTION_KEYS[currentPromptNode.keyIndex].toLowerCase()
+          ) {
+            setNodeStates((prev) => ({
+              ...prev,
+              [currentPromptNode.id]: true,
+            }));
+            const nextCount = unlockedCount + 1;
+            setUnlockedCount(nextCount);
+            setCurrentPromptNode(null);
+            setInput("");
+            if (nextCount === NODES.length) setShowWin(true);
+          } else {
+            alert("ACCESS DENIED: INCORRECT KEY");
+          }
+        };
 
-            return (
-                <div className="p-8 h-screen flex flex-col relative">
-                    <header className="flex justify-between items-end mb-8 border-b border-zinc-900 pb-4">
-                        <div>
-                            <h1 className="text-2xl font-bold tracking-tighter">THE MINDFALL PROTOCOL <span className="blinking-cursor"></span></h1>
-                            <p className="text-[9px] text-zinc-600 uppercase">Secure Node Recovery // Puerto Rico Grid</p>
-                        </div>
-                        <div className="text-right font-mono">
-                            <p className="text-[10px] text-emerald-500">OPERATIVE: {moniker.toUpperCase()}</p>
-                            <p className="text-[10px]">RECOVERY_PROGRESS: {((unlockedCount / NODES.length) * 100).toFixed(0)}%</p>
-                        </div>
-                    </header>
-
-                    <div className="relative flex-1 bg-zinc-900/10 border border-zinc-800 rounded flex items-center justify-center">
-                        <svg viewBox="0 0 100 80" className="w-full max-w-4xl h-auto">
-                            {NODES.map(node => (
-                                <g key={node.id} onClick={() => !nodeStates[node.id] && setCurrentPromptNode(node)}>
-                                    <circle
-                                        cx={node.x} cy={node.y} r="3"
-                                        fill={nodeStates[node.id] ? "#00ff41" : "#ff3333"}
-                                        className={`node-dot ${nodeStates[node.id] ? 'success-glow' : ''}`}
-                                    />
-                                    <text x={node.x + 4} y={node.y + 1} fill="white" fontSize="2.5" className="pointer-events-none opacity-40 font-bold uppercase">{node.name}</text>
-                                </g>
-                            ))}
-                        </svg>
-
-                        {currentPromptNode && (
-                            <div className="absolute inset-0 bg-black/90 flex items-center justify-center z-50">
-                                <div className="p-8 border border-[#00ff41] bg-black w-96 shadow-[0_0_50px_rgba(0,255,65,0.2)]">
-                                    <h3 className="text-xs font-bold mb-1 text-[#00ff41] uppercase tracking-widest">Authentication Required</h3>
-                                    <p className="text-[10px] text-zinc-500 mb-6 uppercase">Node ID: {currentPromptNode.id} // Location: {currentPromptNode.name}</p>
-                                    <input
-                                        autoFocus
-                                        placeholder="RCYC{...}"
-                                        className="w-full bg-transparent border-b border-zinc-800 focus:border-[#00ff41] outline-none mb-6 py-2 text-sm text-emerald-400"
-                                        value={input}
-                                        onChange={(e) => setInput(e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
-                                    />
-                                    <div className="flex gap-3">
-                                        <button onClick={handleUnlock} className="flex-1 bg-[#00ff41] text-black text-[10px] font-bold py-3 uppercase">Decrypt Node</button>
-                                        <button onClick={() => {setCurrentPromptNode(null); setInput('');}} className="flex-1 border border-zinc-800 text-zinc-500 text-[10px] py-3 uppercase hover:text-white">Abort</button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {showWinScreen && (
-                        <div className="fixed inset-0 bg-[#00ff41] flex items-center justify-center z-[100] p-10">
-                            <div className="bg-black p-12 border-4 border-black w-full max-w-2xl text-center shadow-2xl">
-                                <h2 className="text-4xl font-black text-[#00ff41] mb-2 italic">MISSION COMPLETE</h2>
-                                <p className="text-zinc-500 text-xs mb-8 tracking-[0.5em] uppercase border-b border-zinc-900 pb-4">Grid Restored // All Nodes Operational</p>
-
-                                <div className="space-y-6">
-                                    <div className="bg-zinc-900/50 p-6 rounded">
-                                        <p className="text-[10px] text-zinc-500 mb-2 uppercase">Master Certification Key</p>
-                                        <p className="text-2xl font-mono text-[#00ff41] select-all tracking-wider">RCYC{'{'}PUERTO_RICO_ONLINE_2026{'}'}</p>
-                                    </div>
-
-                                    <button
-                                        onClick={() => {localStorage.clear(); window.location.reload();}}
-                                        className="text-[10px] text-zinc-500 hover:text-[#00ff41] uppercase border border-zinc-800 px-4 py-2"
-                                    >
-                                        Restart Protocol
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            );
+        if (!isStarted) {
+          return (
+            <div className="flex flex-col items-center justify-center h-screen space-y-6">
+              <h1 className="text-3xl font-bold border-b border-[#00ff41] pb-2 uppercase tracking-tighter">
+                The Mindfall Protocol
+              </h1>
+              <div className="avatar-container">
+                {avatar ? (
+                  <img src={avatar} className="avatar-image" />
+                ) : (
+                  <span className="text-2xl">👤</span>
+                )}
+              </div>
+              <input
+                type="file"
+                onChange={handleFile}
+                className="text-[10px] text-zinc-500"
+              />
+              <input
+                className="bg-black border border-[#00ff41] p-2 text-center text-[#00ff41] outline-none w-64 uppercase"
+                placeholder="Enter Moniker"
+                value={moniker}
+                onChange={(e) => setMoniker(e.target.value)}
+              />
+              <button
+                onClick={() => {
+                  localStorage.setItem("moniker", moniker);
+                  setIsStarted(true);
+                }}
+                className="px-10 py-2 bg-[#00ff41] text-black font-bold uppercase hover:bg-white"
+              >
+                Initiate
+              </button>
+            </div>
+          );
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(React.createElement(App));
-    </script>
-</body>
+        return (
+          <div className="p-10 h-screen flex flex-col relative">
+            <header className="flex justify-between items-end mb-10 border-b border-zinc-900 pb-4">
+              <div>
+                <h1 className="text-2xl font-bold uppercase tracking-tighter">
+                  Mindfall_Grid_Restore
+                </h1>
+                <p className="text-[10px] text-zinc-600 uppercase">
+                  Secure Node Recovery // Puerto Rico
+                </p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="avatar-container !w-12 !h-12">
+                  {avatar ? (
+                    <img src={avatar} className="avatar-image" />
+                  ) : (
+                    <span>👤</span>
+                  )}
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] text-emerald-500 font-bold uppercase">
+                    Operative: {moniker}
+                  </p>
+                  <p className="text-[10px] text-zinc-500 uppercase">
+                    Progress:{" "}
+                    {((unlockedCount / NODES.length) * 100).toFixed(0)}%
+                  </p>
+                </div>
+              </div>
+            </header>
 
+            <div className="relative flex-1 bg-zinc-900/10 border border-zinc-800 rounded flex items-center justify-center">
+              <svg viewBox="0 0 100 80" className="w-full h-full max-w-4xl">
+                {NODES.map((node) => (
+                  <g
+                    key={node.id}
+                    onClick={() =>
+                      !nodeStates[node.id] && setCurrentPromptNode(node)
+                    }
+                    className="cursor-pointer"
+                  >
+                    <circle
+                      cx={node.x}
+                      cy={node.y}
+                      r="2.5"
+                      fill={nodeStates[node.id] ? "#00ff41" : "#ff3333"}
+                      className="node-dot"
+                    />
+                    <text
+                      x={node.x + 4}
+                      y={node.y + 1}
+                      fill="white"
+                      fontSize="2.2"
+                      className="opacity-40 font-bold uppercase pointer-events-none"
+                    >
+                      {node.name}
+                    </text>
+                  </g>
+                ))}
+              </svg>
+
+              {currentPromptNode && (
+                <div className="absolute inset-0 bg-black/95 flex items-center justify-center z-[200]">
+                  <div className="p-8 border border-[#00ff41] bg-black w-96">
+                    <p className="text-[10px] text-[#00ff41] mb-4 uppercase font-bold tracking-widest">
+                      Decrypt Node: {currentPromptNode.name}
+                    </p>
+                    <input
+                      autoFocus
+                      className="w-full bg-transparent border-b border-zinc-800 focus:border-[#00ff41] outline-none mb-8 py-2 text-[#00ff41] uppercase text-sm"
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && decrypt()}
+                    />
+                    <div className="flex gap-4">
+                      <button
+                        onClick={decrypt}
+                        className="flex-1 bg-[#00ff41] text-black text-[10px] font-bold py-3 uppercase"
+                      >
+                        Decrypt
+                      </button>
+                      <button
+                        onClick={() => {
+                          setCurrentPromptNode(null);
+                          setInput("");
+                        }}
+                        className="flex-1 border border-zinc-800 text-zinc-500 text-[10px] py-3 uppercase"
+                      >
+                        Abort
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {showWin && (
+              <div className="fixed inset-0 bg-[#00ff41] flex items-center justify-center z-[300] p-10">
+                <div className="bg-black p-12 border-4 border-black text-center shadow-2xl max-w-xl w-full">
+                  <h2 className="text-4xl font-black text-[#00ff41] mb-4 italic uppercase">
+                    GRID RESTORED
+                  </h2>
+                  <p className="text-zinc-500 text-[10px] mb-8 uppercase tracking-[0.5em] border-b border-zinc-900 pb-4">
+                    Mission Complete // All Nodes Operational
+                  </p>
+                  <div className="bg-zinc-900/50 p-6 rounded mb-8 text-center">
+                    <p className="text-[10px] text-zinc-500 mb-2 uppercase">
+                      Master Certification Key
+                    </p>
+                    <p className="text-xl font-bold text-[#00ff41] tracking-wider select-all">
+                      RCYC{"{"}PUERTO_RICO_ONLINE_2026{"}"}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      localStorage.clear();
+                      window.location.reload();
+                    }}
+                    className="text-[10px] text-zinc-600 hover:text-[#00ff41] uppercase"
+                  >
+                    Restart Protocol
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(<App />);
+    </script>
+  </body>
 </html>
