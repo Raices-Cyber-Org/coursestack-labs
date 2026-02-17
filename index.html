@@ -8,22 +8,29 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="./common/null-sector.css">
     <style>
+        /* IMPORTANT: Prevents the scanline from blocking clicks */
+        .scanline {
+            pointer-events: none !important;
+        }
+
         .lab-card {
             transition: all 0.2s ease;
             border: 1px solid #1a1a1a;
-            cursor: pointer;
             display: block;
+            position: relative;
+            z-index: 10;
+            /* Ensures buttons are above the background */
         }
 
         .lab-card:hover {
             border-color: #00ff41;
-            background: rgba(0, 255, 65, 0.03);
+            background: rgba(0, 255, 65, 0.05);
         }
     </style>
 </head>
 
 <body class="scanline flex flex-col min-h-screen">
-    <div class="max-w-4xl mx-auto w-full p-8 flex-1">
+    <div class="max-w-4xl mx-auto w-full p-8 flex-1 relative z-20">
         <header class="mb-12 border-b border-zinc-900 pb-6">
             <h1 class="text-3xl font-bold tracking-tighter text-white uppercase">Raices_Cyber: <span
                     class="text-[#00ff41]">Lab_Portal</span></h1>
@@ -46,10 +53,6 @@
             </a>
         </div>
     </div>
-
-    <footer class="p-8 text-[8px] text-zinc-800 uppercase tracking-[0.5em] text-center">
-        Raices Cyber Org // Course Development
-    </footer>
 </body>
 
 </html>
