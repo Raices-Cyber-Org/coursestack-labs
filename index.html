@@ -3,24 +3,51 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Redirecting | Raices Cyber Labs</title>
-    <meta http-equiv="refresh" content="0; url=./lab-nullbot/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Portal | Raices Cyber Org</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./common/null-sector.css">
     <style>
-        body {
-            background: #050505;
-            color: #10b981;
-            font-family: monospace;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
+        .lab-card {
+            transition: all 0.2s ease;
+            border: 1px solid #1a1a1a;
+        }
+
+        .lab-card:hover {
+            border-color: #00ff41;
+            background: rgba(0, 255, 65, 0.03);
         }
     </style>
 </head>
 
-<body>
-    <div id="status">INITIALIZING_SECURE_LINK...</div>
+<body class="scanline flex flex-col min-h-screen">
+    <div class="max-w-4xl mx-auto w-full p-8 flex-1">
+        <header class="mb-12 border-b border-zinc-900 pb-6">
+            <h1 class="text-3xl font-bold tracking-tighter text-white uppercase">Raices_Cyber: <span
+                    class="text-[#00ff41]">Lab_Portal</span></h1>
+            <p class="text-[10px] text-zinc-600 uppercase tracking-[0.4em] mt-2">Instructional Environment Index</p>
+        </header>
+
+        <div class="grid md:grid-cols-2 gap-4">
+            <a href="./lab-nullbot/" class="lab-card p-6 rounded bg-black group">
+                <span class="text-[9px] text-zinc-700 font-mono block mb-2 uppercase">ID: lab-nullbot</span>
+                <h2 class="text-lg font-bold text-white group-hover:text-[#00ff41] uppercase">NullBot v3.0</h2>
+                <p class="text-[11px] text-zinc-500 mt-2 leading-relaxed uppercase">Social engineering simulation.
+                    Bypass AI firewall logic using persona-based exploitation.</p>
+            </a>
+
+            <a href="./lab-mindfall/" class="lab-card p-6 rounded bg-black group">
+                <span class="text-[9px] text-zinc-700 font-mono block mb-2 uppercase">ID: lab-mindfall</span>
+                <h2 class="text-lg font-bold text-white group-hover:text-[#00ff41] uppercase">The Mindfall Protocol</h2>
+                <p class="text-[11px] text-zinc-500 mt-2 leading-relaxed uppercase">Network recovery CTF. Restore the
+                    Puerto Rico power grid by decrypting secured regional nodes.</p>
+            </a>
+        </div>
+    </div>
+
+    <footer class="p-8 text-[8px] text-zinc-800 uppercase tracking-[0.5em] text-center">
+        Raices Cyber Org // Course Development
+    </footer>
 </body>
 
 </html>

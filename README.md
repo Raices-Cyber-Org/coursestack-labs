@@ -1,34 +1,27 @@
-#  Raices Cyber Interactive Labs
+# Raices Cyber Interactive Labs
 
 This repository hosts the source code for interactive cybersecurity simulations and lab environments embedded within **CourseStack** lessons for Raices Cyber Org. 
 
-##  Repository Architecture
+## Repository Architecture
 We use a **Monorepo** structure to manage multiple labs while maintaining a consistent design language.
 
-* **/common**: Contains global assets, including the `null-sector.css` master theme.
-* **/assets**: Global media, Raices logos, icons, and branding assets.
+* **/common**: Global assets and the `null-sector.css` master theme.
 * **/lab-[name]**: Individual, self-contained interactive labs.
 
-##  Deployment Workflow
+## Deployment Workflow
 This repository is deployed via **GitHub Pages**. 
 
-1.  **Develop Locally**: Create a new folder (e.g., `/lab-nullbot`) and build your `index.html`.
-2.  **Theme Integration**: Link to the shared styles to maintain the Null_Sector aesthetic:
-    `<link rel="stylesheet" href="../common/null-sector.css">`.
-3.  **Push to Main**: Once pushed to the `main` branch, GitHub Actions will automatically deploy the update.
-4.  **Embed in CourseStack**: Use the following URL format in the CourseStack Embed Block:
-    `https://Raices-Cyber-Org.github.io/coursestack-labs/lab-[name]/`
+1. **Develop**: Create a new folder (e.g., `/lab-name`) and build the `index.html`.
+2. **Style**: Link to shared styles: `<link rel="stylesheet" href="../common/null-sector.css">`.
+3. **Deploy**: Push to the `main` branch to trigger the automatic update.
+4. **Embed**: Use the following URL format in CourseStack: 
+   `https://Raices-Cyber-Org.github.io/coursestack-labs/lab-[name]/`.
 
-##  Local Preview
-To preview a lab locally before pushing to production:
-1. Navigate to the specific lab folder.
-2. Start a local HTTP server (e.g., `python3 -m http.server 8000`).
-3. View in browser at: `http://localhost:8000`.
-
-##  Lab Inventory
-| Lab Slug | Description | Primary Vulnerability |
+## Lab Inventory
+| Lab Name | Description | Link |
 | :--- | :--- | :--- |
-| `lab-nullbot` | Social engineering via an AI terminal bypass. | Human Element / Social Engineering |
+| **NullBot v3.0** | AI Social Engineering Simulation | [Launch Lab](https://Raices-Cyber-Org.github.io/coursestack-labs/lab-nullbot/) |
+| **The Mindfall Protocol** | PR Grid Recovery CTF | [Launch Lab](https://Raices-Cyber-Org.github.io/coursestack-labs/lab-mindfall/) |
 
 ---
 **Maintainer:** Raices Course Development
