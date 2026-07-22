@@ -22,6 +22,7 @@ This repository is deployed via **GitHub Pages**.
 | :--- | :--- | :--- |
 | **NullBot v3.0** | AI Social Engineering Simulation | [Launch Lab](https://Raices-Cyber-Org.github.io/coursestack-labs/lab-nullbot/) |
 | **The Mindfall Protocol** | PR Grid Recovery CTF | [Launch Lab](https://Raices-Cyber-Org.github.io/coursestack-labs/lab-mindfall/) |
+| **RCYC Terminal App** | Terminal App for BOOTCAMP | [Launch Lab](https://raices-cyber-org.github.io/coursestack-labs/lab-rcyc-terminal-app/) |
 
 ---
 **Maintainer:** Raices Course Development
