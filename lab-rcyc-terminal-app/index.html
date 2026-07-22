@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RCYC SOC Web Terminal</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- jQuery & jQuery Terminal -->
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery.terminal@2.35.3/js/jquery.terminal.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery.terminal@2.35.3/css/jquery.terminal.min.css"/>
+  <style>
+    body {
+      background-color: #0d1117;
+      color: #c9d1d9;
+      font-family: 'Fira Code', Monospace, 'Courier New';
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+      overflow: hidden;
+    }
+    #terminal-container {
+      flex: 1;
+      padding: 10px;
+    }
+    .terminal {
+      --background: #0d1117;
+      --color: #3fb950;
+      height: 100%;
+    }
+    .terminal-output div {
+      line-height: 1.4;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- TOP APP HEADER -->
+  <header class="bg-gray-900 border-b border-gray-800 px-4 py-2.5 flex items-center justify-between text-xs text-gray-400">
+    <div class="flex items-center space-x-2">
+      <span class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
+      <span class="font-bold text-gray-200 tracking-wider">RCYC SOC TERMINAL NODE</span>
+      <span class="text-gray-600">|</span>
+      <span>HOST: analyst@rcyc-sensor-01</span>
+    </div>
+    <div class="flex items-center space-x-2">
+      <button onclick="toggleCheatSheet()" class="px-2.5 py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded border border-gray-700 transition">
+        📖 Quick Reference
+      </button>
+      <button onclick="resetTerminal()" class="px-2.5 py-1 bg-red-900/40 hover:bg-red-800/60 text-red-300 rounded border border-red-700/50 transition">
+        🔄 Reset
+      </button>
+    </div>
+  </header>
+
+  <!-- COLLAPSIBLE CHEAT SHEET DRAWER -->
+  <div id="cheat-sheet" class="hidden bg-gray-950 border-b border-gray-800 p-3 text-xs text-gray-300 grid grid-cols-2 md:grid-cols-4 gap-2">
+    <div><span class="text-green-400 font-bold">pwd</span> - Print location</div>
+    <div><span class="text-green-400 font-bold">ls -la</span> - Reveal hidden files</div>
+    <div><span class="text-green-400 font-bold">cd [dir]</span> - Change directory</div>
+    <div><span class="text-green-400 font-bold">cat [file]</span> - View file content</div>
+    <div><span class="text-green-400 font-bold">grep [key] [file]</span> - Search text</div>
+    <div><span class="text-green-400 font-bold">sudo [cmd]</span> - Elevate privileges</div>
+    <div><span class="text-yellow-400 font-bold">hint</span> - Lab assistance</div>
+    <div><span class="text-green-400 font-bold">whoami / id</span> - User identity</div>
+  </div>
+
+  <!-- TERMINAL CONTAINER -->
+  <div id="terminal-container"></div>
+
+  <!-- VIRTUAL FILESYSTEM & CLI LOGIC -->
+  <script>
+    // 1. VIRTUAL FILESYSTEM (Includes Hidden Dotfiles & PCAP Capture Logs)
+    const fileSystem = {
+      "/": ["etc", "home", "var", "tmp"],
+      "/tmp": ["session.tmp", ".cache_dump.log"],
+      "/home": ["analyst"],
+      "/home/analyst": ["readme.txt", "investigation_notes.txt", ".bash_history", ".secret_vault.txt"],
+      "/etc": ["passwd", "shadow", "hosts", "issue", ".sys_backup.conf"],
+      "/var": ["log"],
+      "/var/log": ["audit", "apache2", "syslog", "auth.log", "packet_safari.log"],
+      "/var/log/audit": ["auth_audit.log"],
+      "/var/log/apache2": ["access.log", "error.log"]
+    };
+
+    const availableCommands = [
+      'help', 'hint', 'pwd', 'ls', 'cd', 'cat', 'grep', 'head', 'tail',
+      'whoami', 'id', 'uname', 'find', 'history', 'clear', 'sudo'
+    ];
+
+    // Restricted files (Require root / sudo)
+    const restrictedFiles = ["/etc/shadow"];
+
+    const fileContents = {
+      "/home/analyst/readme.txt": "Welcome Analyst!\nUse 'cd /var/log/audit' to inspect system audit records.\nRemember: Pressing [Tab] enables auto-completion. Type 'hint' if you need guidance.",
+      "/home/analyst/investigation_notes.txt": "[NOTES - DAY 6]\n- SSH attack source flagged from Day 5: 172.16.254.1\n- PCAP capture trace saved to /var/log/packet_safari.log.\n- Check /var/log/auth.log for past brute-force records.\n- Check /var/log/audit/auth_audit.log for privilege escalation alerts.",
+      "/home/analyst/.bash_history": "cd /var/log/audit\ncat auth_audit.log\ncd /home/analyst\nclear\n# BONUS FLAG: RCYC{SECRET_BASH_HISTORY_RECON_2026}",
+      "/home/analyst/.secret_vault.txt": "[HIDDEN VAULT]\nCongratulations on using 'ls -a' to discover dotfiles!\nBONUS FLAG: RCYC{SECRET_HIDDEN_DOTFILE_HUNTER}",
+      "/tmp/session.tmp": "SESSION_ID=998231_ACTIVE",
+      "/tmp/.cache_dump.log": "[TMP CACHE DUMP 0x99A4]\nTemp session string saved...\nBONUS FLAG: RCYC{SECRET_TMP_DIR_DIGGER_2026}",
+      "/etc/passwd": "root:x:0:0:root:/root:/bin/bash\nanalyst:x:1000:1000:Analyst Host:/home/analyst:/bin/bash\nwww-data:x:33:33:www-data:/var/www:/usr/sbin/nologin",
+      "/etc/shadow": "root:$6$vU7a2K$aB8x9...:19420:0:99999:7:::\nanalyst:$6$pL0m9Q$rT4w2...:19420:0:99999:7:::",
+      "/etc/hosts": "127.0.0.1 localhost\n10.0.0.5 target-db-server\n192.168.10.45 insider-workstation",
+      "/etc/issue": "RCYC Linux Security Sensor Node 1.04 \\n \\l",
+      "/etc/.sys_backup.conf": "[SYSTEM BACKUP CONFIG]\nAdmin Notes: Local backups archived weekly.\nBONUS FLAG: RCYC{SECRET_ETC_CONFIG_EXPLORER}",
+      "/var/log/syslog": "May 12 10:00:01 kernel: [0.000000] Linux version 5.15.0-generic\nMay 12 10:01:15 systemd: Started System Logging Service.",
+      "/var/log/auth.log":
+`May 12 10:14:03 rcyc-sensor-01 sshd[3301]: Failed password for invalid user admin from 172.16.254.1 port 22
+May 12 10:14:04 rcyc-sensor-01 sshd[3302]: Failed password for root from 172.16.254.1 port 22
+May 12 10:14:05 rcyc-sensor-01 sshd[3303]: Failed password for root from 172.16.254.1 port 22`,
+      "/var/log/apache2/access.log":
+`192.168.1.15 - - [12/May/2026:10:14:01] "GET /index.html HTTP/1.1" 200 4523
+10.0.0.88 - - [12/May/2026:10:15:22] "GET /cgi-bin/stats.sh HTTP/1.1" 200 120 "() { :; }; echo 'VULNERABLE'; /bin/cat /etc/passwd"`,
+      "/var/log/audit/auth_audit.log":
+`11:02:14 systemd[1]: Started User Manager for UID 1000.
+11:02:18 sshd[4102]: Accepted publickey for analyst from 192.168.1.50 port 52104 ssh2
+11:03:01 sudo[4210]: analyst : TTY=pts/0 ; PWD=/etc ; USER=root ; COMMAND=/usr/bin/cat /etc/shadow
+11:03:01 sudo[4210]: AUDIT_ALERT: CRITICAL FILE ACCESS DETECTED - FLAG: RCYC{CLI_LOG_PARSED_2026}`,
+      "/var/log/packet_safari.log":
+`10:14:01.102 DNS IN 192.168.10.45 -> google.com TYPE: A QUERY SUCCESS
+10:14:01.310 DNS IN 192.168.10.45 -> github.com TYPE: A QUERY SUCCESS
+10:14:01.520 DNS IN 192.168.10.45 -> coursestack.com TYPE: A QUERY SUCCESS
+10:14:01.812 DNS IN 192.168.10.45 -> internal-hr.local TYPE: A QUERY SUCCESS
+10:14:02.001 TCP OUT 192.168.10.45:54210 -> 10.0.0.5:8888 [SYN] Seq=0
+10:14:02.002 TCP IN  10.0.0.5:8888 -> 192.168.10.45:54210 [SYN, ACK] Seq=0 Ack=1
+10:14:02.003 TCP OUT 192.168.10.45:54210 -> 10.0.0.5:8888 [ACK] Seq=1 Ack=1
+10:14:02.005 TCP PAYLOAD [UNENCRYPTED STREAM - PORT 8888]:
+>>> RECONNAISSANCE_COMPLETE // SYSTEM_ACCESS_GRANTED // FLAG: RCYC{SECRET_PACKET_SAFARI_INTERCEPT_2026}
+10:14:03.110 DNS IN 192.168.10.45 -> updates.microsoft.com TYPE: A QUERY SUCCESS`
+    };
+
+    let currentDir = "/home/analyst";
+    let termInstance = null;
+    let commandHistory = [];
+
+    // Path normalizer
+    function resolvePath(target) {
+      if (!target || target === ".") return currentDir;
+      if (target === "~") return "/home/analyst";
+      if (target === "/") return "/";
+
+      let pathParts = target.startsWith("/")
+        ? target.split("/")
+        : (currentDir === "/" ? ["", target] : (currentDir + "/" + target).split("/"));
+
+      let stack = [];
+      for (let part of pathParts) {
+        if (part === "" || part === ".") continue;
+        if (part === "..") {
+          if (stack.length > 0) stack.pop();
+        } else {
+          stack.push(part);
+        }
+      }
+      return "/" + stack.join("/");
+    }
+
+    // 2. TERMINAL SETUP WITH SMART TAB AUTO-COMPLETION
+    $(document).ready(function () {
+      termInstance = $('#terminal-container').terminal(function (command, term) {
+        const trimmed = command.trim();
+        if (trimmed === '') return;
+        commandHistory.push(trimmed);
+
+        // Handle Pipe Commands
+        if (trimmed.includes('|')) {
+          const parts = trimmed.split('|').map(s => s.trim());
+          const firstCmd = parts[0];
+          const secondCmd = parts[1];
+
+          let intermediateOutput = executeCommand(firstCmd, false);
+          if (secondCmd.startsWith('grep ')) {
+            const pattern = secondCmd.replace('grep ', '').trim().replace(/['"]/g, '');
+            const lines = intermediateOutput.split('\n');
+            const filteredLines = lines.filter(line => line.includes(pattern));
+            // Color highlight match in piped grep output
+            const highlighted = filteredLines.map(l => {
+              const regex = new RegExp(`(${pattern})`, 'g');
+              return l.replace(regex, '[[b;#f85149;]$1]');
+            });
+            term.echo(highlighted.join('\n'));
+          } else {
+            term.echo("Unsupported pipe command. Use 'grep'.");
+          }
+          return;
+        }
+
+        const output = executeCommand(trimmed, false);
+        if (output) term.echo(output);
+      }, {
+        greetings: "[[b;#3fb950;]RCYC Linux Security Shell v1.3.0]\nType 'help' for commands, or 'hint' for lab guidance. Press [Tab] to auto-complete.\n",
+        prompt: function() {
+          return `[[b;#3fb950;]analyst@rcyc-sensor-01]:[[b;#58a6ff;]${currentDir}]$ `;
+        },
+        completion: function(string, callback) {
+          const commandLine = this.get_command();
+          const tokens = commandLine.trimStart().split(/\s+/);
+
+          if (tokens.length === 1 && !commandLine.endsWith(' ')) {
+            callback(availableCommands.filter(c => c.startsWith(string)));
+            return;
+          }
+          if (tokens.length === 2 && tokens[0] === 'sudo' && !commandLine.endsWith(' ')) {
+            callback(availableCommands.filter(c => c.startsWith(string)));
+            return;
+          }
+
+          let searchPath = currentDir;
+          let prefix = "";
+
+          if (string.includes('/')) {
+            const lastSlashIndex = string.lastIndexOf('/');
+            const dirPart = string.substring(0, lastSlashIndex);
+            prefix = string.substring(0, lastSlashIndex + 1);
+            searchPath = resolvePath(dirPart === "" ? "/" : dirPart);
+            string = string.substring(lastSlashIndex + 1);
+          }
+
+          const items = fileSystem[searchPath] || [];
+          const matches = items
+            .filter(item => item.startsWith(string))
+            .map(item => prefix + item);
+
+          callback(matches);
+        }
+      });
+    });
+
+    // 3. COMMAND ENGINE
+    function executeCommand(cmdString, isSudo = false) {
+      let trimmed = cmdString.trim();
+
+      if (trimmed.startsWith("sudo ")) {
+        return executeCommand(trimmed.replace(/^sudo\s+/, ''), true);
+      }
+
+      const parts = trimmed.split(/\s+/);
+      const cmd = parts[0];
+      const args = parts.slice(1);
+
+      switch (cmd) {
+        case 'help':
+          return "Core Navigation & Audit Commands:\n  pwd             - Print working directory\n  ls [-la]        - List files (use -a to reveal hidden dotfiles)\n  cd [dir]        - Change directory\n  cat [file]      - View file content\n  grep [key] [file]- Filter file content (highlights matches)\n  head / tail     - Read file start/end\n  whoami / id     - Check current privileges\n  find [dir]      - Search filesystem\n  hint            - Get guidance for Lab 6.1\n  uname -a        - Operating system info\n  clear           - Clear terminal screen\n\nTip: Press [Tab] key for automatic command and path completion.";
+
+        case 'hint':
+          return "[[b;#e3b341;]💡 LAB 6.1 HINT:]\n1. Use 'cd /var/log/audit' to enter the target audit directory.\n2. Run 'ls -la' to view files in the directory.\n3. Run 'cat auth_audit.log | grep AUDIT_ALERT' to extract Flag F06!\n\n[[b;#58a6ff;]🔍 SECRET EASTER EGG HINT:] Try running 'ls -a' in different folders to find hidden secret dotfiles, or inspect '/var/log/packet_safari.log' for network PCAP traces!";
+
+        case 'whoami':
+          return isSudo ? "root" : "analyst";
+
+        case 'id':
+          return isSudo
+            ? "uid=0(root) gid=0(root) groups=0(root)"
+            : "uid=1000(analyst) gid=1000(analyst) groups=1000(analyst),27(sudo)";
+
+        case 'uname':
+          return "Linux rcyc-sensor-01 5.15.0-88-generic #98-Ubuntu SMP Mon Oct 2 15:18:56 UTC 2026 x86_64";
+
+        case 'pwd':
+          return currentDir;
+
+        case 'ls':
+          let target = currentDir;
+          let showDetails = false;
+          let showAll = false;
+          let cleanArgs = [];
+
+          for (let arg of args) {
+            if (arg.startsWith('-')) {
+              if (arg.includes('l')) showDetails = true;
+              if (arg.includes('a')) showAll = true;
+            } else {
+              cleanArgs.push(arg);
+            }
+          }
+
+          if (cleanArgs.length > 0) {
+            target = resolvePath(cleanArgs[0]);
+          }
+
+          if (fileSystem[target]) {
+            let rawItems = fileSystem[target];
+            // Filter hidden files unless -a / -la is passed
+            let items = showAll
+              ? ['.', '..', ...rawItems]
+              : rawItems.filter(i => !i.startsWith('.'));
+
+            let formattedItems = items.map(item => {
+              if (item === '.' || item === '..') return `[[b;#58a6ff;]${item}]`;
+              let itemPath = target === '/' ? '/' + item : target + '/' + item;
+              let isDir = !!fileSystem[itemPath];
+              let isHidden = item.startsWith('.');
+
+              if (isDir) {
+                return `[[b;#58a6ff;]${item}/]`;         // Bold Blue for Directories
+              } else if (item.endsWith('.log')) {
+                return `[[;#e3b341;]${item}]`;            // Amber/Yellow for Log Files
+              } else if (restrictedFiles.includes(itemPath)) {
+                return `[[;#f85149;]${item}]`;            // Light Red for Restricted Files
+              } else if (isHidden) {
+                return `[[;i;#8b949e;]${item}]`;          // Italicized Gray for Hidden Dotfiles
+              } else {
+                return `[[;#c9d1d9;]${item}]`;            // Standard White for Regular Files
+              }
+            });
+
+            if (showDetails) {
+              return formattedItems.map(itemStr => {
+                let rawName = itemStr.replace(/\[\[.*?;\](.*?)\]/, '$1').replace('/', '');
+                let itemPath = target === '/' ? '/' + rawName : target + '/' + rawName;
+                let isDir = (rawName === '.' || rawName === '..' || !!fileSystem[itemPath]);
+                let perms = isDir ? "drwxr-xr-x 2 analyst analyst 4096" : "-rw-r--r-- 1 analyst analyst 1024";
+                if (restrictedFiles.includes(itemPath)) perms = "-rw-r----- 1 root    shadow    1024";
+                return `${perms} May 12 10:14 ${itemStr}`;
+              }).join('\n');
+            } else {
+              return formattedItems.join('  ');
+            }
+          } else {
+            return `ls: cannot access '${cleanArgs[0] || target}': No such file or directory`;
+          }
+
+        case 'cd':
+          if (args.length === 0 || args[0] === "~") {
+            currentDir = "/home/analyst";
+            return "";
+          }
+          let newPath = resolvePath(args[0]);
+          if (fileSystem[newPath]) {
+            currentDir = newPath;
+            return "";
+          } else {
+            return `bash: cd: ${args[0]}: No such file or directory`;
+          }
+
+        case 'cat':
+          if (args.length === 0) return "cat: missing file operand";
+          let filePath = resolvePath(args[0]);
+
+          if (restrictedFiles.includes(filePath) && !isSudo) {
+            return `cat: ${args[0]}: Permission denied`;
+          }
+
+          if (fileContents[filePath]) {
+            return fileContents[filePath];
+          } else if (fileSystem[filePath]) {
+            return `cat: ${args[0]}: Is a directory`;
+          } else {
+            return `cat: ${args[0]}: No such file or directory`;
+          }
+
+        case 'head':
+        case 'tail':
+          if (args.length === 0) return `${cmd}: missing file operand`;
+          let htPath = resolvePath(args[0]);
+          if (fileContents[htPath]) {
+            const lines = fileContents[htPath].split('\n');
+            return (cmd === 'head' ? lines.slice(0, 3) : lines.slice(-3)).join('\n');
+          }
+          return `${cmd}: ${args[0]}: No such file or directory`;
+
+        case 'grep':
+          if (args.length < 2) return "Usage: grep [PATTERN] [FILE]";
+          const pattern = args[0].replace(/['"]/g, '');
+          let gFilePath = resolvePath(args[1]);
+          if (fileContents[gFilePath]) {
+            const lines = fileContents[gFilePath].split('\n');
+            const matched = lines.filter(l => l.includes(pattern));
+            // Color highlight matched term in bold red
+            const highlighted = matched.map(l => {
+              const regex = new RegExp(`(${pattern})`, 'g');
+              return l.replace(regex, '[[b;#f85149;]$1]');
+            });
+            return highlighted.join('\n');
+          } else {
+            return `grep: ${args[1]}: No such file or directory`;
+          }
+
+        case 'find':
+          let findDir = args[0] ? resolvePath(args[0]) : currentDir;
+          let results = [];
+          for (let path in fileSystem) {
+            if (path.startsWith(findDir)) {
+              fileSystem[path].forEach(f => results.push(`${path === '/' ? '' : path}/${f}`));
+            }
+          }
+          return results.length > 0 ? results.join('\n') : "find: No results found";
+
+        case 'history':
+          return commandHistory.map((c, i) => `  ${i + 1}  ${c}`).join('\n');
+
+        case 'clear':
+          if (termInstance) termInstance.clear();
+          return "";
+
+        default:
+          return `bash: command not found: ${cmd}. Type 'help' for available options.`;
+      }
+    }
+
+    // 4. UI CONTROLS
+    function toggleCheatSheet() {
+      const drawer = document.getElementById('cheat-sheet');
+      drawer.classList.toggle('hidden');
+    }
+
+    function resetTerminal() {
+      currentDir = "/home/analyst";
+      commandHistory = [];
+      if (termInstance) {
+        termInstance.clear();
+        termInstance.echo("[[b;#3fb950;]RCYC Linux Security Shell v1.3.0]\n[SYSTEM RESET COMPLETED] Terminal restored to default state.\n");
+      }
+    }
+  </script>
+</body>
+</html>
