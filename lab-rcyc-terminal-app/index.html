@@ -246,7 +246,7 @@ May 12 10:14:05 rcyc-sensor-01 sshd[3303]: Failed password for root from 172.16.
           return "Core Navigation & Audit Commands:\n  pwd             - Print working directory\n  ls [-la]        - List files (use -a to reveal hidden dotfiles)\n  cd [dir]        - Change directory\n  cat [file]      - View file content\n  grep [key] [file]- Filter file content (highlights matches)\n  head / tail     - Read file start/end\n  whoami / id     - Check current privileges\n  find [dir]      - Search filesystem\n  hint            - Get guidance for Lab 6.1\n  uname -a        - Operating system info\n  clear           - Clear terminal screen\n\nTip: Press [Tab] key for automatic command and path completion.";
 
         case 'hint':
-          return "[[b;#e3b341;]💡 LAB 6.1 HINT:]\n1. Use 'cd /var/log/audit' to enter the target audit directory.\n2. Run 'ls -la' to view files in the directory.\n3. Run 'cat auth_audit.log | grep AUDIT_ALERT' to extract Flag F06!\n\n[[b;#58a6ff;]🔍 SECRET EASTER EGG HINT:] Try running 'ls -a' in different folders to find hidden secret dotfiles, or inspect '/var/log/packet_safari.log' for network PCAP traces!";
+          return "[[b;#e3b341;] LAB HINT:]\n1. Use 'cd /var/log/audit' to enter the target audit directory.\n2. Run 'ls -la' to view files in the directory.\n3. Run 'cat auth_audit.log | grep AUDIT_ALERT' to extract Flag F07!\n\n[[b;#58a6ff;] SECRET EASTER EGG HINT:] Try running 'ls -a' in different folders to find hidden secret dotfiles, or inspect '/var/log/packet_safari.log' for network PCAP traces!";
 
         case 'whoami':
           return isSudo ? "root" : "analyst";
